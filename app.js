@@ -49,7 +49,7 @@ const testData = [
         { id: '5-leon', type: 'leon', text: 'ERES COMPETITIVO', icon: 'trophy' },
         { id: '5-nutria', type: 'nutria', text: 'ERES PROMOTOR', icon: 'star' },
         { id: '5-labrador', type: 'labrador', text: 'NO TE GUSTA EL CAMBIO', icon: 'lock' },
-        { id: '5-castor', type: 'castor', text: 'ERES PRACTICO', icon: 'tool' }
+        { id: '5-castor', type: 'castor', text: 'ERES PRACTICO', icon: 'wrench' }
     ],
     [
         { id: '6-leon', type: 'leon', text: 'RESUELVES PROBLEMAS', icon: 'hammer' },
@@ -230,7 +230,8 @@ const profilesDB = {
 };
 
 let sortableInstance = null;
-let chartInstance = null;
+let chartInstance    = null;
+let hasSavedToFirebase = false; // guard against double-save
 
 // --- 4. CORE FUNCTIONS ---
 
@@ -279,6 +280,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Reset Scores
       state.scores = { leon: 0, nutria: 0, labrador: 0, castor: 0 };
       state.currentRound = 0;
+      hasSavedToFirebase = false; // reset for new test session
 
       startTest();
     });
@@ -434,8 +436,11 @@ function finishTest() {
   renderResults();
   switchView("results-view");
 
-  // Save to Firebase (We will add this soon)
-  saveToFirebase();
+  // Save to Firebase once per completed test
+  if (!hasSavedToFirebase) {
+    hasSavedToFirebase = true;
+    saveToFirebase();
+  }
 }
 
 function renderResults() {
@@ -651,3 +656,4 @@ async function generatePDF() {
     template.classList.add("hidden-for-pdf"); // hide again
   }
 }
+
