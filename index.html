@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test de Personalidad Gary Smalley</title>
+    <!-- Tailwind CSS (for rapid utility styling if needed, alongside custom CSS) -->
+    <!-- We will use Custom CSS for specific glassmorphism and animations, but tailwind base helps -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="styles.css" rel="stylesheet" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- SortableJS for Drag and Drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+    <!-- Chart.js for Results Graph -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- SweetAlert2 for elegant alerts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- html2canvas and jsPDF for Report Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Firebase SDK (Modular v10.7.1) -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+      import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyBcDQcRbIEznV1yLzg7d5MfNtInBmV4Y0o",
+        authDomain: "leadermap-live.firebaseapp.com",
+        projectId: "leadermap-live",
+        storageBucket: "leadermap-live.firebasestorage.app",
+        messagingSenderId: "313210183968",
+        appId: "1:313210183968:web:5e51b24a5a5d3b255ab745",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db  = getFirestore(app);
+
+      // Expose to regular (non-module) scripts
+      window._fb = { db, collection, addDoc };
+    </script>
+  </head>
+  <body
+    class="bg-gray-50 text-gray-800 font-inter antialiased overflow-x-hidden min-h-screen relative flex flex-col"
+  >
+    <!-- Corporate Header -->
+    <header class="w-full bg-[#0B67C9] shadow-sm h-16 md:h-20 px-4 md:px-8 flex justify-between items-center sticky top-0 z-50">
+      <div class="flex items-center gap-4 h-full py-2">
+        <img src="logo_brey.png" alt="BREY." class="h-full w-auto object-contain" />
+        <div class="h-8 md:h-10 border-l border-white/30 pl-4 flex flex-col justify-center">
+          <span class="text-white font-bold text-lg md:text-xl leading-none tracking-tight">Test de Personalidad</span>
+          <span class="text-white/80 text-xs md:text-sm">Modelo Gary Smalley</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Background Decoration -->
+    <div class="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
+      <div
+        class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-100 rounded-full blur-[100px] opacity-70"
+      ></div>
+      <div
+        class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-orange-100 rounded-full blur-[100px] opacity-70"
+      ></div>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <main
+      class="container mx-auto px-4 py-8 max-w-4xl relative flex-1 flex flex-col justify-center"
+    >
+      <!-- VIEW 1: LANDING PAGE -->
+      <section
+        id="landing-view"
+        class="view-section active flex flex-col items-center justify-center text-center"
+      >
+        <h1
+          class="text-4xl md:text-5xl font-outfit font-bold text-gray-900 mb-4 tracking-tight"
+        >
+          Descubre tu <span class="text-blue-600">Perfil Dominante</span>
+        </h1>
+        <p class="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+          Conoce si eres León, Nutria, Labrador o Castor según el modelo de Gary
+          Smalley. Ordena las características que mejor te describen y obtén tu
+          reporte detallado.
+        </p>
+
+        <div
+          class="glass-card w-full max-w-md p-8 rounded-2xl shadow-xl border border-white/20"
+        >
+          <form id="registration-form" class="space-y-4 text-left">
+            <div>
+              <label
+                for="reg-name"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Nombre y Apellido</label
+              >
+              <input
+                type="text"
+                id="reg-name"
+                required
+                pattern="^\S+\s+\S.*$"
+                title="Escribe al menos tu nombre y un apellido"
+                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow outline-none"
+                placeholder="Ej. Juan Pérez"
+                oninput="validateNameField(this)"
+              />
+              <p id="name-hint" class="text-xs mt-1 text-gray-400">Incluye nombre y apellido</p>
+            </div>
+            <div>
+              <label
+                for="reg-company"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Empresa</label
+              >
+              <input
+                type="text"
+                id="reg-company"
+                required
+                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow outline-none"
+                placeholder="Ej. Brey"
+              />
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  for="reg-age"
+                  class="block text-sm font-medium text-gray-700 mb-1"
+                  >Edad</label
+                >
+                <input
+                  type="number"
+                  id="reg-age"
+                  required
+                  min="15"
+                  max="100"
+                  class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow outline-none"
+                  placeholder="Ej. 30"
+                />
+              </div>
+              <div>
+                <label
+                  for="reg-gender"
+                  class="block text-sm font-medium text-gray-700 mb-1"
+                  >Género</label
+                >
+                <select
+                  id="reg-gender"
+                  required
+                  class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow outline-none bg-white"
+                >
+                  <option value="" disabled selected>Selecciona</option>
+                  <option value="Masculino">Masculino</option>
+                  <option value="Femenino">Femenino</option>
+                  <option value="Otro">Otro/Prefiero no decir</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label
+                for="reg-role"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Puesto</label
+              >
+              <input
+                type="text"
+                id="reg-role"
+                required
+                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow outline-none"
+                placeholder="Ej. Gerente de Ventas"
+              />
+            </div>
+
+            <button
+              type="submit"
+              class="w-full mt-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transform transition-all duration-300 flex justify-center items-center gap-2"
+            >
+              Comenzar Test
+              <i data-lucide="arrow-right" class="w-5 h-5"></i>
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- VIEW 2: TEST ENGINE -->
+      <section
+        id="test-view"
+        class="view-section hidden flex-col items-center w-full"
+      >
+        <div class="w-full flex justify-between items-center mb-6">
+          <div>
+            <span class="text-sm font-medium text-blue-600 mb-1 block"
+              >Ronda <span id="current-round">1</span> de 10</span
+            >
+            <div class="w-48 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                id="progress-bar"
+                class="h-full bg-blue-600 rounded-full transition-all duration-300"
+                style="width: 10%"
+              ></div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onclick="cancelTest()"
+            class="text-sm text-gray-500 hover:text-gray-800 transition-colors flex items-center gap-1"
+          >
+            <i data-lucide="x-circle" class="w-4 h-4"></i> Salir
+          </button>
+        </div>
+
+        <div class="text-center mb-8">
+          <h2
+            class="text-2xl md:text-3xl font-outfit font-bold text-gray-900 mb-2"
+          >
+            Ordena estas características
+          </h2>
+          <p class="text-gray-600">
+            Arrastra la que <strong>MÁS</strong> te describe hacia arriba (4
+            pts) y la que <strong>MENOS</strong> te describe hacia abajo (1 pt).
+          </p>
+        </div>
+
+        <div class="w-full max-w-sm mx-auto relative flex">
+          <!-- Points Indicator (Left Side - Visible on all screens) -->
+          <div
+            class="flex flex-col justify-between py-6 items-center w-8 text-lg font-black select-none mr-2"
+          >
+            <div class="text-blue-600">4</div>
+            <div class="text-green-500">3</div>
+            <div class="text-yellow-500">2</div>
+            <div class="text-red-500">1</div>
+          </div>
+
+          <!-- Draggable List -->
+          <ul id="sortable-list" class="space-y-3 flex-1">
+            <!-- Cards will be injected here by JS -->
+          </ul>
+        </div>
+
+        <button
+          id="btn-next-round"
+          class="mt-10 bg-gray-900 text-white font-semibold py-3 px-8 rounded-xl shadow-md hover:bg-gray-800 transform transition-all duration-200 flex items-center gap-2"
+        >
+          Siguiente
+          <i data-lucide="arrow-right" class="w-5 h-5"></i>
+        </button>
+      </section>
+
+      <!-- VIEW 3: RESULTS DASHBOARD -->
+      <section
+        id="results-view"
+        class="view-section hidden flex-col items-center w-full"
+      >
+        <!-- Header Result -->
+        <div class="text-center mb-10 animation-fade-in-up">
+          <h2 class="text-xl text-gray-500 font-medium mb-4">
+            Tus resultados están listos, <span id="res-name-display"></span>
+          </h2>
+          
+          <!-- Image Wrapper with White Background -->
+          <div class="bg-white rounded-3xl shadow-md p-6 inline-block mx-auto mb-6 border border-gray-100">
+            <img id="res-animal-img" src="" class="h-40 md:h-56 w-auto object-contain drop-shadow-sm" alt="Animal Dominante">
+          </div>
+
+          <h1 class="text-4xl md:text-5xl font-outfit font-extrabold mb-4">
+            Tu perfil dominante es
+            <span id="res-dominant-animal" class="text-animal-main"
+              >Cargando...</span
+            >
+          </h1>
+          <p class="text-gray-600 max-w-2xl mx-auto" id="res-dominant-intro">
+            Generando resumen...
+          </p>
+          <div class="mt-6 flex justify-center gap-4">
+            <button
+              id="btn-export-pdf"
+              class="bg-white border-2 border-blue-100 text-blue-700 font-semibold py-2 px-6 rounded-lg shadow-sm hover:bg-indigo-50 hover:border-blue-300 transition-colors flex items-center gap-2"
+            >
+              <i data-lucide="download" class="w-5 h-5"></i> Exportar Reporte
+              PDF
+            </button>
+            <button
+              onclick="location.reload()"
+              class="bg-gray-100 text-gray-600 font-semibold py-2 px-6 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              Reiniciar
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full">
+          <!-- Left Column: Chart -->
+          <div
+            class="lg:col-span-1 glass-card p-6 rounded-2xl shadow-lg border border-white/40 flex flex-col items-center justify-center animation-fade-in-up delay-100"
+          >
+            <h3
+              class="text-lg font-bold text-gray-800 mb-4 w-full text-left font-outfit"
+            >
+              Distribución de Energía
+            </h3>
+            <div class="w-full relative h-[300px]">
+              <canvas id="resultsChart"></canvas>
+            </div>
+            <div
+              class="w-full flex justify-between mt-4 text-xs font-medium text-gray-500 px-2"
+            >
+              <span>Min (10)</span>
+              <span>Max (40)</span>
+            </div>
+          </div>
+
+          <!-- Right Column: Details Details -->
+          <div
+            class="lg:col-span-2 flex flex-col gap-6 animation-fade-in-up delay-200"
+          >
+            <!-- Card 1: Sobresaliente -->
+            <div
+              class="glass-card p-6 rounded-2xl shadow-md border-l-4 border-l-animal-main"
+            >
+              <div class="flex items-center gap-3 mb-3">
+                <div class="bg-animal-light text-animal-main p-2 rounded-lg">
+                  <i data-lucide="star" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 font-outfit">
+                  Características Sobresalientes
+                </h3>
+              </div>
+              <p class="text-gray-700 leading-relaxed" id="res-sobresaliente">
+                Cargando...
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Card 2: A Favor y En Contra -->
+              <div class="glass-card p-6 rounded-2xl shadow-md bg-white/80">
+                <div class="flex items-center gap-3 mb-3">
+                  <i data-lucide="scale" class="w-6 h-6 text-gray-500"></i>
+                  <h3 class="text-lg font-bold text-gray-800 font-outfit">
+                    A Favor y En Contra
+                  </h3>
+                </div>
+                <div class="text-sm text-gray-700 space-y-2">
+                  <div id="res-pros-cons">Cargando...</div>
+                </div>
+              </div>
+
+              <!-- Card 3: Bajo Presión -->
+              <div
+                class="glass-card p-6 rounded-2xl shadow-md bg-red-50/50 border border-red-100"
+              >
+                <div class="flex items-center gap-3 mb-3">
+                  <i
+                    data-lucide="alert-triangle"
+                    class="w-6 h-6 text-red-500"
+                  ></i>
+                  <h3 class="text-lg font-bold text-gray-800 font-outfit">
+                    Bajo Presión
+                  </h3>
+                </div>
+                <p
+                  class="text-sm text-gray-700 leading-relaxed"
+                  id="res-presion"
+                >
+                  Cargando...
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- HIDDEN PDF TEMPLATE (Landscape A4: 1123px x 793px approx) -->
+      <div
+        id="pdf-template"
+        class="absolute left-[-9999px] top-0 w-[1280px] h-[720px] bg-[#f8fafc] text-black font-inter hidden-for-pdf flex flex-col overflow-hidden"
+      >
+        <!-- Header: Full width blue bar -->
+        <div
+          style="
+            background-color: #0B67C9;
+            width: 100%;
+            height: 80px;
+            padding: 0 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            flex-shrink: 0;
+          "
+        >
+          <div style="display: flex; gap: 20px; align-items: center; height: 50px;">
+            <img src="brey-logo.PNG" alt="BREY." style="height: 100%; width: auto; object-fit: contain;" />
+            <div style="border-left: 1px solid rgba(255,255,255,0.3); padding-left: 20px; display: flex; flex-direction: column; justify-content: center;">
+              <span style="font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: #ffffff; margin: 0; line-height: 1;">
+                Test de Personalidad
+              </span>
+              <span style="font-size: 14px; color: rgba(255,255,255,0.8); margin-top: 4px;">
+                Modelo Gary Smalley
+              </span>
+            </div>
+          </div>
+          <div style="text-align: right; font-size: 13px; color: #ffffff; display: flex; flex-direction: column; justify-content: center; padding-right: 20px;">
+            <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 14px;"><span id="pdf-date"></span></p>
+            <p style="margin: 0 0 2px 0; font-size: 16px;"><strong><span id="pdf-name"></span></strong></p>
+            <p style="margin: 0; font-size: 13px; color: rgba(255,255,255,0.8);"><strong>Edad:</strong> <span id="pdf-age"></span> años</p>
+          </div>
+        </div>
+
+        <!-- Body Wrapper with padding -->
+        <div style="padding: 25px 40px 15px 40px; display: flex; flex-direction: column; flex: 1; box-sizing: border-box; height: 640px;">
+          
+          <!-- Main Content Layout (Landscape) -->
+          <div style="display: flex; gap: 30px; flex: 1; height: 100%;">
+            <!-- Left Column: Chart & Animal Profile (30%) -->
+            <div style="width: 32%; display: flex; flex-direction: column; gap: 20px; height: 100%;">
+              
+              <!-- Prominent Animal Block -->
+              <div style="background-color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid #e2e8f0;">
+                <div style="background-color: #f0f7ff; padding: 15px; border-radius: 50%; margin-bottom: 12px; border: 2px solid #bfdbfe;">
+                  <img id="pdf-animal-img" src="" style="height: 100px; width: 100px; object-fit: contain;" alt="Animal Dominante"/>
+                </div>
+                <p style="font-family: 'Outfit', sans-serif; font-size: 14px; color: #64748b; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Perfil Dominante</p>
+                <h2 id="pdf-animal" style="font-family: 'Outfit', sans-serif; font-size: 34px; font-weight: 800; margin: 5px 0 0 0; color: #1e3a8a;"></h2>
+              </div>
+
+              <!-- Energy Chart Block -->
+              <div style="background-color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); flex: 1; border: 1px solid #e2e8f0; display: flex; flex-direction: column;">
+                <h3 style="font-family: 'Outfit', sans-serif; font-size: 16px; margin: 0 0 15px 0; color: #1e3a8a; text-align: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+                  Distribución de Energía
+                </h3>
+                <div style="display: flex; justify-content: center; align-items: center; padding-top: 5px;">
+                  <img id="pdf-chart-img" style="width: 200px; height: 200px; object-fit: contain; display: block;" />
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Right Column: 3 Columns of Info (68%) -->
+            <div style="width: 68%; display: flex; flex-direction: column; height: 100%;">
+              
+              <!-- 3 Panel Layout exactly filling height -->
+              <div style="display: flex; gap: 20px; flex: 1; height: 100%;">
+                
+                <!-- Sobresalientes -->
+                <div style="flex: 1; background-color: white; border-radius: 12px; padding: 25px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); border-top: 6px solid #3b82f6; overflow: hidden; display: flex; flex-direction: column;">
+                  <h3 style="font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 800; color: #1e3a8a; margin: 0 0 15px 0;">
+                    Características Sobresalientes
+                  </h3>
+                  <div id="pdf-sobresaliente" style="font-size: 12.5px; color: #475569; line-height: 1.5;"></div>
+                </div>
+
+                <!-- A Favor y En Contra -->
+                <div style="flex: 1; background-color: white; border-radius: 12px; padding: 25px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); border-top: 6px solid #10b981; overflow: hidden; display: flex; flex-direction: column;">
+                  <h3 style="font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 800; color: #065f46; margin: 0 0 15px 0;">
+                    A Favor y En Contra
+                  </h3>
+                  <div id="pdf-pros-cons" style="font-size: 12.5px; color: #475569; line-height: 1.5;"></div>
+                </div>
+
+                <!-- Bajo Presion -->
+                <div style="flex: 1; background-color: #fffaf5; border-radius: 12px; padding: 25px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); border-top: 6px solid #ef4444; border-left: 1px solid #fee2e2; border-right: 1px solid #fee2e2; border-bottom: 1px solid #fee2e2; overflow: hidden; display: flex; flex-direction: column;">
+                  <h3 style="font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 800; color: #991b1b; margin: 0 0 15px 0;">
+                    Bajo Presión en Negativo
+                  </h3>
+                  <div id="pdf-presion" style="font-size: 12.5px; color: #475569; line-height: 1.5;"></div>
+                </div>
+                
+              </div>
+              
+              <!-- Footer precisely inside the column block at bottom -->
+              <div style="margin-top: 20px; display: flex; justify-content: flex-end; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 12px; font-size: 11.5px; font-weight: bold; color: #64748b; font-family: 'Outfit', sans-serif;">
+                Adaptado por: BREY.® México 2026
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+
+    <!-- Custom Logic -->
+    <script src="app.js"></script>
+    <script>
+      // Init Lucide Icons
+      lucide.createIcons();
+    </script>
+  </body>
+</html>

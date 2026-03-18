@@ -1,0 +1,194 @@
+/* styles.css */
+:root {
+  /* Color Palette for Animals (BREY Corporate Blues) */
+  --color-leon: #4a7bb3;
+  --color-leon-light: #eaf1f8;
+
+  --color-nutria: #5b8ebc;
+  --color-nutria-light: #eef4f9;
+
+  --color-labrador: #6c9ec5;
+  --color-labrador-light: #f1f6fa;
+
+  --color-castor: #2f5c8f;
+  --color-castor-light: #e6eef5;
+
+  /* Base Colors */
+  --bg-main: #f8fafc;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+}
+
+/* Glassmorphism Utilities */
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* View Section Management */
+.view-section {
+  display: none;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.view-section.active {
+  display: flex;
+  opacity: 1;
+}
+
+/* SortableJS Styles */
+.sortable-item {
+  display: flex !important;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+  cursor: grab;
+  transition: all 0.2s ease;
+  user-select: none;
+  font-size: 1.1rem;
+  font-weight: 500;
+  /* Allow text to wrap naturally */
+  white-space: normal !important;
+  word-wrap: break-word;
+  height: auto !important;
+  min-height: 60px;
+}
+
+@media (max-width: 768px) {
+    .sortable-item {
+        font-size: 0.8rem; /* Even smaller text on mobile to fit long sentences */
+        padding: 10px;     /* Tightest padding to save space on mobile */
+        gap: 8px;          /* Less space between icon and text */
+        min-height: auto;  /* Allow varying heights based on content */
+    }
+}
+
+.sortable-item:hover {
+  border-color: #6366f1; /* Indigo hover */
+  box-shadow:
+    0 4px 6px -1px rgba(99, 102, 241, 0.1),
+    0 2px 4px -1px rgba(99, 102, 241, 0.06);
+  transform: translateY(-2px);
+}
+
+.sortable-item:active {
+  cursor: grabbing;
+}
+
+/* Styling for the dragged element */
+.sortable-ghost {
+  opacity: 0.4;
+  background: #f1f5f9;
+  border: 2px dashed #94a3b8;
+}
+
+.sortable-drag {
+  opacity: 1 !important;
+  background: white !important;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  transform: scale(1.05);
+}
+
+/* Animal Theme Utility Classes (Injected by JS) */
+.theme-leon {
+  --animal-main: var(--color-leon);
+  --animal-light: var(--color-leon-light);
+}
+.theme-nutria {
+  --animal-main: var(--color-nutria);
+  --animal-light: var(--color-nutria-light);
+}
+.theme-labrador {
+  --animal-main: var(--color-labrador);
+  --animal-light: var(--color-labrador-light);
+}
+.theme-castor {
+  --animal-main: var(--color-castor);
+  --animal-light: var(--color-castor-light);
+}
+
+html[data-theme="leon"] .text-animal-main,
+html[data-theme="leon"] .border-l-animal-main {
+  border-left-color: var(--color-leon) !important;
+  color: var(--color-leon) !important;
+}
+html[data-theme="leon"] .bg-animal-light {
+  background-color: var(--color-leon-light) !important;
+}
+
+html[data-theme="nutria"] .text-animal-main,
+html[data-theme="nutria"] .border-l-animal-main {
+  border-left-color: var(--color-nutria) !important;
+  color: var(--color-nutria) !important;
+}
+html[data-theme="nutria"] .bg-animal-light {
+  background-color: var(--color-nutria-light) !important;
+}
+
+html[data-theme="labrador"] .text-animal-main,
+html[data-theme="labrador"] .border-l-animal-main {
+  border-left-color: var(--color-labrador) !important;
+  color: var(--color-labrador) !important;
+}
+html[data-theme="labrador"] .bg-animal-light {
+  background-color: var(--color-labrador-light) !important;
+}
+
+html[data-theme="castor"] .text-animal-main,
+html[data-theme="castor"] .border-l-animal-main {
+  border-left-color: var(--color-castor) !important;
+  color: var(--color-castor) !important;
+}
+html[data-theme="castor"] .bg-animal-light {
+  background-color: var(--color-castor-light) !important;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animation-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+  opacity: 0; /* Important for keyframe start */
+}
+
+.delay-100 {
+  animation-delay: 100ms;
+}
+.delay-200 {
+  animation-delay: 200ms;
+}
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+/* Hide things completely when printing/generating PDF */
+.hidden-for-pdf {
+  display: none !important;
+}
+
+/* Force show for PDF (used temporarily by JS) */
+.show-for-pdf {
+  display: block !important;
+}

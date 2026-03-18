@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard – Test de Personalidad Gary Smalley | BREY.</title>
+  <meta name="description" content="Panel de resultados del Test de Personalidad Gary Smalley." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Firebase SDK (Modular v10.7.1) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, query, orderBy, onSnapshot, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBcDQcRbIEznV1yLzg7d5MfNtInBmV4Y0o",
+      authDomain: "leadermap-live.firebaseapp.com",
+      projectId: "leadermap-live",
+      storageBucket: "leadermap-live.firebasestorage.app",
+      messagingSenderId: "313210183968",
+      appId: "1:313210183968:web:5e51b24a5a5d3b255ab745",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+
+    // Expose to regular scripts
+    window._fbDash = { db, collection, query, orderBy, onSnapshot, writeBatch, getDocs };
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:   #0B67C9;
+      --bg:     #f0f5fc;
+      --white:  #ffffff;
+      --border: #e2e8f0;
+      --text:   #1e293b;
+      --muted:  #64748b;
+    }
+
+    body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── HEADER ── */
+    .app-header {
+      background: var(--blue);
+      padding: 0 40px;
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 50;
+      box-shadow: 0 2px 20px rgba(11,103,201,.3);
+    }
+    .header-left { display: flex; align-items: center; gap: 18px; height: 44px; }
+    .header-left img { height: 100%; object-fit: contain; }
+    .header-divider { height: 34px; width: 1px; background: rgba(255,255,255,.3); }
+    .header-title h1 { color: #fff; font-size: 20px; font-weight: 800; line-height: 1.1; }
+    .header-title p  { color: rgba(255,255,255,.7); font-size: 13px; margin-top: 2px; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .live-badge {
+      display: flex; align-items: center; gap: 7px;
+      background: rgba(255,255,255,.15); padding: 6px 14px;
+      border-radius: 999px; font-size: 13px; color: #fff; font-weight: 600;
+    }
+    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .btn-refresh {
+      background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.3);
+      color: #fff; padding: 8px 18px; border-radius: 8px;
+      font-family: 'Outfit',sans-serif; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: background .2s;
+    }
+    .btn-refresh:hover { background: rgba(255,255,255,.3); }
+    .btn-clear {
+      background: rgba(239,68,68,.2); border: 1px solid rgba(239,68,68,.45);
+      color: #fca5a5; padding: 8px 18px; border-radius: 8px;
+      font-family: 'Outfit',sans-serif; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: background .2s;
+    }
+    .btn-clear:hover { background: rgba(239,68,68,.35); }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      background: white; border-bottom: 1px solid var(--border);
+      padding: 13px 40px; display: flex; align-items: center; gap: 28px;
+    }
+    .stat-item { display: flex; flex-direction: column; }
+    .stat-value { font-size: 22px; font-weight: 800; color: var(--blue); line-height: 1; }
+    .stat-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .stat-sep   { width: 1px; height: 34px; background: var(--border); }
+
+    /* ── BODY ── */
+    .dashboard-body { padding: 28px 40px; }
+
+    #search-bar {
+      width: 100%; max-width: 360px; padding: 10px 18px;
+      border: 1px solid var(--border); border-radius: 10px;
+      font-family: 'Outfit',sans-serif; font-size: 15px;
+      outline: none; margin-bottom: 24px; background: white;
+      transition: border .2s;
+    }
+    #search-bar:focus { border-color: var(--blue); }
+
+    /* ── CARDS GRID ── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    /* ── MINI CARD ── */
+    .mini-card {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 3px 12px rgba(0,0,0,.06);
+      cursor: pointer;
+      transition: transform .2s, box-shadow .2s;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .mini-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 28px rgba(11,103,201,.14);
+    }
+    .mini-card-top {
+      background: var(--blue);
+      width: 100%; padding: 18px;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    .mini-card-top .user-name { color: white; font-size: 16px; font-weight: 800; text-align: center; }
+    .mini-card-top .user-meta { color: rgba(255,255,255,.75); font-size: 12px; }
+    .mini-card-bottom {
+      padding: 18px; display: flex; flex-direction: column; align-items: center; gap: 10px;
+    }
+    .mini-animal-img {
+      width: 80px; height: 80px; object-fit: contain;
+      background: #f0f7ff; border-radius: 50%; padding: 10px;
+      border: 2px solid #bfdbfe;
+    }
+    .mini-animal-name {
+      font-size: 18px; font-weight: 800; text-align: center;
+    }
+
+    /* ── STATE SCREENS ── */
+    .state-screen {
+      min-height: 55vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 14px; text-align: center; color: var(--muted);
+    }
+    .state-screen .icon { font-size: 50px; }
+    .state-screen h2 { font-size: 21px; color: var(--text); font-weight: 700; }
+    .state-screen p  { font-size: 15px; max-width: 380px; line-height: 1.6; }
+
+    /* ── MODAL BACKDROP ── */
+    #modal-backdrop {
+      display: none;
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(10,15,40,.6);
+      backdrop-filter: blur(6px);
+      align-items: center; justify-content: center;
+    }
+    #modal-backdrop.open { display: flex; }
+
+    /* ── NAV ARROWS ── */
+    .modal-arrow {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 50px; height: 50px; border-radius: 50%;
+      background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25);
+      color: white; font-size: 22px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .2s; z-index: 201;
+      user-select: none;
+    }
+    .modal-arrow:hover { background: rgba(255,255,255,.3); }
+    .modal-arrow.left  { left: 20px; }
+    .modal-arrow.right { right: 20px; }
+
+    /* ── MODAL CARD ── */
+    .modal-card {
+      background: #f8fafc;
+      border-radius: 18px;
+      overflow: hidden;
+      width: 92vw; max-width: 1100px;
+      height: 88vh; max-height: 680px;
+      display: flex; flex-direction: column;
+      box-shadow: 0 30px 80px rgba(0,0,0,.35);
+      position: relative;
+      animation: modal-in .25s ease;
+    }
+    @keyframes modal-in { from { opacity:0; transform:scale(.96); } to { opacity:1; transform:scale(1); } }
+
+    /* Modal header */
+    .modal-header {
+      background: var(--blue); padding: 0 36px;
+      height: 72px; display: flex; align-items: center;
+      justify-content: space-between; flex-shrink: 0;
+    }
+    .modal-header .logo-area { display: flex; align-items: center; gap: 16px; height: 42px; }
+    .modal-header .logo-area img { height: 100%; object-fit: contain; }
+    .modal-header .title-area { color: white; }
+    .modal-header .title-area h2 { font-size: 20px; font-weight: 800; line-height: 1; }
+    .modal-header .title-area p  { font-size: 13px; color: rgba(255,255,255,.75); margin-top: 3px; }
+    .modal-header .user-info { text-align: right; color: white; font-size: 13px; padding-right: 4px; }
+    .modal-header .user-info strong { display: block; font-size: 17px; }
+
+    /* Modal body — 16:9-ish landscape layout */
+    .modal-body {
+      flex: 1; display: flex; gap: 0; overflow: hidden;
+    }
+
+    /* Left panel */
+    .modal-left {
+      width: 30%; background: white;
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 16px; padding: 22px;
+    }
+    .modal-animal-circle {
+      background: #f0f7ff; padding: 18px; border-radius: 50%;
+      border: 3px solid #bfdbfe;
+    }
+    .modal-animal-circle img { width: 100px; height: 100px; object-fit: contain; display: block; }
+    .modal-animal-label { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    .modal-animal-name  { font-size: 30px; font-weight: 800; }
+    .modal-chart-title  { font-size: 14px; font-weight: 700; color: var(--blue); border-bottom: 1px solid var(--border); width: 100%; text-align: center; padding-bottom: 8px; }
+    .modal-chart-wrap   { width: 100%; height: 170px; position: relative; }
+
+    /* Right panel */
+    .modal-right {
+      flex: 1; display: flex; flex-direction: column; padding: 22px 26px; gap: 14px; overflow: hidden;
+    }
+    .modal-info-col { display: flex; gap: 16px; flex: 1; min-height: 0; }
+
+    .info-panel {
+      flex: 1; border-radius: 12px; padding: 16px 18px;
+      border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden;
+    }
+    .info-panel h3 { font-size: 14px; font-weight: 800; margin-bottom: 10px; }
+    .info-panel ul { padding-left: 16px; overflow: hidden; }
+    .info-panel li  { font-size: 12px; color: var(--muted); line-height: 1.55; margin-bottom: 1px; }
+    .panel-blue  { border-left: 5px solid #3b82f6; }
+    .panel-blue h3  { color: #1e3a8a; }
+    .panel-green { border-left: 5px solid #10b981; }
+    .panel-green h3 { color: #065f46; }
+    .panel-red   { background: #fffaf5; border-left: 5px solid #ef4444; border-top: 1px solid #fee2e2; border-right: 1px solid #fee2e2; border-bottom: 1px solid #fee2e2; }
+    .panel-red h3   { color: #991b1b; }
+    .pros-label { font-size: 11px; font-weight: 700; color: #065f46; margin: 0 0 3px 0; }
+    .cons-label { font-size: 11px; font-weight: 700; color: #991b1b; margin: 8px 0 3px 0; }
+
+    /* Modal footer */
+    .modal-footer {
+      border-top: 1px solid var(--border); padding: 10px 26px;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px; color: var(--muted); flex-shrink: 0; background: white;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 700px) {
+      .app-header { padding: 0 16px; }
+      .stats-bar   { padding: 12px 16px; gap: 14px; }
+      .dashboard-body { padding: 20px 16px; }
+      .cards-grid  { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+      .modal-arrow.left  { left: 4px; }
+      .modal-arrow.right { right: 4px; }
+      .modal-left  { width: 40%; padding: 14px; }
+      .modal-animal-circle img { width: 70px; height: 70px; }
+      .modal-animal-name { font-size: 20px; }
+      .modal-right { padding: 14px; gap: 10px; }
+      .info-panel  { padding: 12px; }
+      .modal-info-col { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="app-header">
+  <div class="header-left">
+    <img src="brey-logo.PNG" alt="BREY." />
+    <div class="header-divider"></div>
+    <div class="header-title">
+      <h1>Dashboard de Resultados</h1>
+      <p>Test de Personalidad – Modelo Gary Smalley</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      <span id="last-update">Cargando…</span>
+    </div>
+    <button class="btn-refresh" onclick="loadResults()">🔄 Actualizar</button>
+    <button class="btn-clear"   onclick="clearDashboard()">🗑 Limpiar</button>
+  </div>
+</header>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat-item"><span class="stat-value" id="stat-total">–</span><span class="stat-label">Participantes</span></div>
+  <div class="stat-sep"></div>
+  <div class="stat-item"><span class="stat-value" id="stat-leon"     style="color:#4a7bb3">–</span><span class="stat-label">🦁 Leones</span></div>
+  <div class="stat-item"><span class="stat-value" id="stat-nutria"   style="color:#5b8ebc">–</span><span class="stat-label">🦦 Nutrias</span></div>
+  <div class="stat-item"><span class="stat-value" id="stat-labrador" style="color:#6c9ec5">–</span><span class="stat-label">🐕 Labradores</span></div>
+  <div class="stat-item"><span class="stat-value" id="stat-castor"   style="color:#2f5c8f">–</span><span class="stat-label">🦫 Castores</span></div>
+</div>
+
+<!-- BODY -->
+<div class="dashboard-body">
+  <input type="text" id="search-bar" placeholder="🔍 Buscar participante…" oninput="filterCards()" />
+  <div id="cards-grid" class="cards-grid" style="display:none"></div>
+  <div id="loading-state" class="state-screen"><div class="icon">⏳</div><h2>Cargando resultados…</h2><p>Conectando, un momento.</p></div>
+  <div id="no-config-state" class="state-screen" style="display:none"><div class="icon">⚙️</div><h2>Modo demostración</h2><p>Pega tu <code>FIREBASE_CONFIG</code> en el script para conectar datos reales.</p></div>
+  <div id="empty-state"   class="state-screen" style="display:none"><div class="icon">🔍</div><h2>Sin resultados</h2><p>No se encontró ningún participante.</p></div>
+  <div id="error-state"   class="state-screen" style="display:none"><div class="icon">❌</div><h2>Error de conexión</h2><p id="error-msg"></p></div>
+</div>
+
+<!-- MODAL -->
+<div id="modal-backdrop" onclick="handleBackdropClick(event)">
+  <button class="modal-arrow left"  onclick="prevModal(); event.stopPropagation()">‹</button>
+  <button class="modal-arrow right" onclick="nextModal(); event.stopPropagation()">›</button>
+
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="logo-area">
+        <img src="brey-logo.PNG" alt="BREY." />
+        <div style="width:1px;height:30px;background:rgba(255,255,255,.3);margin:0 2px;"></div>
+        <div class="title-area">
+          <h2>Test de Personalidad</h2>
+          <p>Modelo Gary Smalley</p>
+        </div>
+      </div>
+      <div class="user-info">
+        <span id="m-date" style="color:rgba(255,255,255,.75);font-size:13px;"></span>
+        <strong id="m-name"></strong>
+        <span id="m-meta" style="color:rgba(255,255,255,.8);font-size:13px;"></span>
+      </div>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      <!-- Left -->
+      <div class="modal-left">
+        <div class="modal-animal-circle">
+          <img id="m-animal-img" src="" alt="" />
+        </div>
+        <p class="modal-animal-label">Perfil Dominante</p>
+        <p class="modal-animal-name" id="m-animal-name"></p>
+        <p class="modal-chart-title">Distribución de Energía</p>
+        <div class="modal-chart-wrap">
+          <canvas id="m-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Right -->
+      <div class="modal-right">
+        <div class="modal-info-col">
+          <!-- Sobresalientes -->
+          <div class="info-panel panel-blue">
+            <h3>Características Sobresalientes</h3>
+            <ul id="m-sobresal"></ul>
+          </div>
+          <!-- A Favor y En Contra -->
+          <div class="info-panel panel-green">
+            <h3>A Favor y En Contra</h3>
+            <p class="pros-label">A Favor:</p>
+            <ul id="m-pros"></ul>
+            <p class="cons-label">En Contra:</p>
+            <ul id="m-cons"></ul>
+          </div>
+          <!-- Bajo Presión -->
+          <div class="info-panel panel-red">
+            <h3>Bajo Presión en Negativo</h3>
+            <ul id="m-presion"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <span id="m-footer-left">BREY.® México 2026</span>
+      <span id="m-counter"></span>
+    </div>
+  </div>
+</div>
+
+<script src="dashboard-data.js"></script>
+<script>
+// ─── FIREBASE CONFIG ──────────────────────────────────────────────────────────
+const FIREBASE_CONFIG = null;
+// const FIREBASE_CONFIG = { apiKey:"...", authDomain:"...", projectId:"...", ... };
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Demo data
+const DEMO_DATA = [
+  { id:"d1", name:"María García",    age:34, gender:"Femenino",   company:"BREY", role:"Directora",    dominant:"leon",     scores:{leon:38,nutria:28,labrador:22,castor:16}, timestamp:new Date("2026-03-17T09:00:00") },
+  { id:"d2", name:"Carlos Mendoza",  age:28, gender:"Masculino",  company:"BREY", role:"Analista",     dominant:"castor",   scores:{leon:14,nutria:20,labrador:18,castor:36}, timestamp:new Date("2026-03-17T10:30:00") },
+  { id:"d3", name:"Sofía Ramírez",   age:41, gender:"Femenino",   company:"BREY", role:"Coordinadora", dominant:"nutria",   scores:{leon:20,nutria:34,labrador:26,castor:22}, timestamp:new Date("2026-03-17T11:00:00") },
+  { id:"d4", name:"Roberto Jiménez", age:55, gender:"Masculino",  company:"BREY", role:"Gerente",      dominant:"labrador", scores:{leon:18,nutria:22,labrador:35,castor:28}, timestamp:new Date("2026-03-17T11:30:00") },
+  { id:"d5", name:"Lucía Torres",    age:31, gender:"Femenino",   company:"BREY", role:"Diseñadora",   dominant:"nutria",   scores:{leon:16,nutria:36,labrador:24,castor:26}, timestamp:new Date("2026-03-17T12:00:00") },
+  { id:"d6", name:"Andrés Morales",  age:47, gender:"Masculino",  company:"BREY", role:"Consultor",    dominant:"leon",     scores:{leon:35,nutria:22,labrador:25,castor:20}, timestamp:new Date("2026-03-17T12:30:00") },
+];
+
+let allResults    = [];
+let filteredResults = [];
+let modalIndex    = 0;
+let modalChart    = null;
+
+// Wait for the module script to set window._fbDash, then load
+document.addEventListener("DOMContentLoaded", () => {
+  let attempts = 0;
+  const tryLoad = () => {
+    attempts++;
+    if (window._fbDash || attempts > 60) { // 60 × 50ms = 3s max wait
+      loadResults();
+    } else {
+      setTimeout(tryLoad, 50);
+    }
+  };
+  setTimeout(tryLoad, 50); // give module a tick to execute
+});
+
+async function loadResults() {
+  showState("loading");
+
+  if (!window._fbDash) {
+    // Firebase not loaded yet — show demo data
+    allResults = DEMO_DATA;
+    renderAll();
+    showState("no-config");
+    return;
+  }
+
+  try {
+    const { db, collection, query, orderBy, onSnapshot } = window._fbDash;
+    const q = query(collection(db, "resultados_smalley"), orderBy("timestamp", "desc"));
+    onSnapshot(
+      q,
+      snap => {
+        allResults = snap.docs.map(doc => {
+          const d = doc.data();
+          return {
+            id: doc.id, ...d,
+            timestamp: d.timestamp ? (d.timestamp.toDate ? d.timestamp.toDate() : new Date(d.timestamp)) : null,
+          };
+        });
+        renderAll();
+        showState("cards");
+      },
+      err => { showState("error"); document.getElementById("error-msg").textContent = err.message; }
+    );
+  } catch(err) {
+    showState("error");
+    document.getElementById("error-msg").textContent = err.message;
+  }
+}
+
+function renderAll() {
+  filterCards();
+  updateStats();
+  document.getElementById("last-update").textContent = "Actualizado " + new Date().toLocaleTimeString("es-MX");
+}
+
+function filterCards() {
+  const q = (document.getElementById("search-bar").value || "").toLowerCase();
+  filteredResults = allResults.filter(r => (r.name || "").toLowerCase().includes(q));
+  renderCards();
+}
+
+function renderCards() {
+  const grid = document.getElementById("cards-grid");
+  if (!filteredResults.length) {
+    grid.innerHTML = "";
+    document.getElementById("empty-state").style.display = "flex";
+    grid.style.display = "none";
+    return;
+  }
+  document.getElementById("empty-state").style.display = "none";
+  grid.style.display = "grid";
+  grid.innerHTML = filteredResults.map((r, i) => buildMiniCard(r, i)).join("");
+}
+
+function buildMiniCard(r, i) {
+  const p = profilesDB[r.dominant];
+  if (!p) return "";
+  const meta = [r.gender, r.age ? r.age + " años" : null].filter(Boolean).join(" · ");
+  return `
+  <div class="mini-card" onclick="openModal(${i})">
+    <div class="mini-card-top">
+      <span class="user-name">${escHtml(r.name || "–")}</span>
+      <span class="user-meta">${escHtml(meta)}</span>
+    </div>
+    <div class="mini-card-bottom">
+      <img class="mini-animal-img" src="${p.image}" alt="${p.name}" />
+      <span class="mini-animal-name" style="color:${p.color}">${p.name}</span>
+    </div>
+  </div>`;
+}
+
+// ── MODAL ────────────────────────────────────────────────────────────────────
+function openModal(idx) {
+  modalIndex = idx;
+  populateModal();
+  document.getElementById("modal-backdrop").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeModal() {
+  document.getElementById("modal-backdrop").classList.remove("open");
+  document.body.style.overflow = "";
+  if (modalChart) { modalChart.destroy(); modalChart = null; }
+}
+
+function handleBackdropClick(e) {
+  if (e.target === document.getElementById("modal-backdrop")) closeModal();
+}
+
+function nextModal() {
+  modalIndex = (modalIndex + 1) % filteredResults.length;
+  populateModal();
+}
+
+function prevModal() {
+  modalIndex = (modalIndex - 1 + filteredResults.length) % filteredResults.length;
+  populateModal();
+}
+
+function populateModal() {
+  const r = filteredResults[modalIndex];
+  if (!r) return;
+  const p = profilesDB[r.dominant];
+  if (!p) return;
+
+  // Header
+  document.getElementById("m-name").textContent  = r.name || "–";
+  document.getElementById("m-meta").textContent  = [r.gender, r.age ? r.age + " años" : null].filter(Boolean).join(" · ");
+  document.getElementById("m-date").textContent  = r.timestamp
+    ? r.timestamp.toLocaleDateString("es-MX", { year:"numeric", month:"long", day:"numeric" })
+    : "";
+
+  // Animal
+  document.getElementById("m-animal-img").src = p.image;
+  document.getElementById("m-animal-img").alt = p.name;
+  const nameEl = document.getElementById("m-animal-name");
+  nameEl.textContent = p.name;
+  nameEl.style.color = p.color;
+
+  // Lists
+  const ul = (items) => (items || []).map(i => `<li>${escHtml(i)}</li>`).join("");
+  document.getElementById("m-sobresal").innerHTML = ul(p.sobresaliente);
+  document.getElementById("m-pros").innerHTML     = ul(p.pros);
+  document.getElementById("m-cons").innerHTML     = ul(p.cons);
+  document.getElementById("m-presion").innerHTML  = ul(p.presion);
+
+  // Footer
+  document.getElementById("m-counter").textContent =
+    `${modalIndex + 1} de ${filteredResults.length} participantes`;
+
+  // Chart
+  if (modalChart) { modalChart.destroy(); modalChart = null; }
+  const ctx = document.getElementById("m-chart").getContext("2d");
+  const sc  = r.scores || {};
+  modalChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["León","Nutria","Labrador","Castor"],
+      datasets: [{
+        data: [sc.leon||0, sc.nutria||0, sc.labrador||0, sc.castor||0],
+        backgroundColor: [
+          profilesDB.leon.color, profilesDB.nutria.color,
+          profilesDB.labrador.color, profilesDB.castor.color
+        ],
+        borderRadius: 6,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        y: { beginAtZero:false, min:10, max:40, ticks:{stepSize:10}, grid:{borderDash:[4,4]} },
+        x: { grid:{display:false} },
+      },
+      plugins: { legend:{display:false} },
+    },
+    plugins: [{
+      id:"barLbl",
+      afterDraw(chart) {
+        const c = chart.ctx;
+        chart.data.datasets.forEach((ds,i) => {
+          chart.getDatasetMeta(i).data.forEach((bar,idx) => {
+            c.save();
+            c.font = "bold 11px Outfit";
+            c.fillStyle = "#1e3a8a";
+            c.textAlign = "center";
+            c.textBaseline = "bottom";
+            c.fillText(ds.data[idx], bar.x, bar.y - 3);
+            c.restore();
+          });
+        });
+      },
+    }],
+  });
+}
+
+// ── STATS ────────────────────────────────────────────────────────────────────
+function updateStats() {
+  const cnt = { leon:0, nutria:0, labrador:0, castor:0 };
+  allResults.forEach(r => { if (r.dominant && cnt[r.dominant]!==undefined) cnt[r.dominant]++; });
+  document.getElementById("stat-total").textContent    = allResults.length;
+  document.getElementById("stat-leon").textContent     = cnt.leon;
+  document.getElementById("stat-nutria").textContent   = cnt.nutria;
+  document.getElementById("stat-labrador").textContent = cnt.labrador;
+  document.getElementById("stat-castor").textContent   = cnt.castor;
+}
+
+function showState(which) {
+  ["loading-state","no-config-state","empty-state","error-state"].forEach(id =>
+    document.getElementById(id).style.display = "none"
+  );
+  document.getElementById("cards-grid").style.display = "none";
+  if (which === "no-config") {
+    document.getElementById("no-config-state").style.display = "flex";
+    document.getElementById("cards-grid").style.display = "grid";
+  } else if (which === "cards") {
+    document.getElementById("cards-grid").style.display = "grid";
+  } else {
+    document.getElementById(`${which}-state`).style.display = "flex";
+  }
+}
+
+async function clearDashboard() {
+  if (!confirm("¿Seguro que deseas limpiar el dashboard? Esto eliminará todos los resultados de Firebase.")) return;
+
+  if (window._fbDash) {
+    try {
+      const { db, collection, getDocs, writeBatch } = window._fbDash;
+      const snap  = await getDocs(collection(db, "resultados_smalley"));
+      const batch = writeBatch(db);
+      snap.docs.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
+      // onSnapshot auto-refreshes the view
+    } catch(err) {
+      alert("Error al limpiar Firebase: " + err.message);
+    }
+  } else {
+    // Demo mode — just empty the view
+    allResults = [];
+    filteredResults = [];
+    updateStats();
+    renderCards();
+    document.getElementById("last-update").textContent = "Panel limpiado";
+  }
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// Keyboard nav
+document.addEventListener("keydown", e => {
+  if (!document.getElementById("modal-backdrop").classList.contains("open")) return;
+  if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); nextModal(); }
+  if (e.key === "ArrowLeft")  { e.preventDefault(); prevModal(); }
+  if (e.key === "Escape")     closeModal();
+});
+</script>
+</body>
+</html>
