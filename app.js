@@ -311,6 +311,10 @@ function switchView(viewId) {
 }
 
 function startTest() {
+  // Re-enable the next-round button in case it was disabled by a previous session
+  const btnNext = document.getElementById("btn-next-round");
+  if (btnNext) btnNext.disabled = false;
+
   switchView("test-view");
   renderRound();
 }
@@ -417,6 +421,10 @@ function cancelTest() {
 }
 
 function finishTest() {
+  // Immediately block any further clicks — the 500ms fade leaves the button visible
+  const btnNext = document.getElementById("btn-next-round");
+  if (btnNext) btnNext.disabled = true;
+
   // Determine Dominant
   let dominantAnimal = "leon";
   let maxScore = -1;
@@ -656,4 +664,5 @@ async function generatePDF() {
     template.classList.add("hidden-for-pdf"); // hide again
   }
 }
+
 
